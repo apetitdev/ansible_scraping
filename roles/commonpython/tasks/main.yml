@@ -22,6 +22,7 @@
     - libpq-dev
     - python-psycopg2
     - libffi-dev
+    - python-tables
 
 - name: Install all the pip common libraries
   sudo: yes
