@@ -1,0 +1,77 @@
+---
+# file: roles/commonpython/tasks/main.yml
+
+- name: Add the repo to upgrade python from 2.7.6 to 2.7.11
+  sudo: yes
+  apt_repository: repo='ppa:fkrull/deadsnakes-python2.7'
+
+- name: update apt-get 
+  sudo: yes
+  apt: update_cache=yes upgrade=dist force=True
+
+- name: Python | Install the distribution's Python base packages
+  sudo: yes
+  apt: pkg={{ item }} state=installed
+  with_items:
+    - python2.7
+    - python2.7-dev
+    - python-pip
+    - python-virtualenv
+    - python-django
+    - libjpeg-dev
+    - libpq-dev
+    - python-psycopg2
+    - libffi-dev
+
+- name: Install all the pip common libraries
+  sudo: yes
+  pip: name={{ item.name }} version={{ item.version }} state=present
+  with_items:
+    - {name: 'ipaddress',     version: 1.0.14 }
+    - {name: 'lxml',          version: 3.4.4  }
+    - {name: 'numpy',         version: 1.10.1 }
+    - {name: 'SciPy',         version: 0.17.0 }
+    - {name: 'pyglet',        version: 1.2.4  }
+    - {name: 'matplotlib',    version: 1.5.1  }
+    - {name: 'BeautifulSoup', version: 3.2.1  }
+    - {name: 'Pillow',        version: 3.1.1  }
+    - {name: 'SQLAlchemy',    version: 1.0.12 }
+    - {name: 'Scapy',         version: 2.3.2  }
+    - {name: 'NLTK',          version: 3.2    }
+    - {name: 'sympy',         version: 0.7.2  }
+    - {name: 'jupyter',       version: 1.0.0  }
+    - {name: 'Pymongo',       version: 3.1.1  }
+    - {name: 'peewee',        version: 2.8.0  }
+    - {name: 'openpyxl',      version: 2.3.3  }
+    - {name: 'xlrd',          version: 0.9.4  }
+    - {name: 'psycopg2',      version: 2.6.1  }
+
+- name: upload Ucloud CDN libray
+  sudo: yes
+  unarchive:
+    src: "{{ item }}.zip"
+    dest: "/home/{{user}}"
+  with_items:
+    - ufile-python
+  tags:
+    - python
+    - CDN
+    - file  
+
+- name: install Ucloud CDN libray
+  sudo: yes
+  shell: "sudo python setup.py install"
+  args:
+    chdir: "/home/{{ user }}/ufile-python/"
+  tags:
+    - python
+    - CDN
+    - file  
+
+- name: remove Ucloud CDN installation package
+  sudo: yes
+  command: "rm -rf /home/{{ user }}/ufile-python"
+  tags:
+    - python
+    - CDN
+    - file  

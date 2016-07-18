@@ -1,0 +1,21 @@
+# file: dev
+
+[commonservers]
+188.166.188.72
+
+[dbservers]
+188.166.188.72
+
+[pythonservers]
+188.166.188.72
+
+[pythonservers]
+188.166.188.72
+
+[pythonscraping]
+188.166.188.72
+
+[rails:vars]
+env=dev
+scraping_db=scraping_db
+host=188.166.224.215

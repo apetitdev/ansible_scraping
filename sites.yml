@@ -1,0 +1,7 @@
+---
+# file: sites.yml
+
+- include: commonservers.yml
+- include: dbservers.yml
+- include: pythonservers.yml
+- include: pythonscraping.yml

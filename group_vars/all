@@ -1,0 +1,5 @@
+---
+# file: group_vars/all
+email_system_admin: aurelienpetit@eiceducation.com.cn
+monit_log: /var/log/monit.log
+user: deployer

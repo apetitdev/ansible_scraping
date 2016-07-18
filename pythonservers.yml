@@ -1,0 +1,7 @@
+---
+# file: pythonservers.yml
+
+- hosts: pythonservers
+  user: deployer
+  roles:
+    - commonpython

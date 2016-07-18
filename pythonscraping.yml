@@ -1,0 +1,7 @@
+---
+# file: pythonscraping.yml
+
+- hosts: pythonscraping
+  user: deployer
+  roles:
+    - pythonscraping

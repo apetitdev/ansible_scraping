@@ -1,0 +1,4 @@
+# File: roles/dbservers/vars/main.yml
+
+mongodb_nohttpinterface: "true"
+mongodb_bind_ip: "127.0.0.1"

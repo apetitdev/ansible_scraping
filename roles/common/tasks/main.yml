@@ -1,0 +1,85 @@
+---
+# file: roles/common/tasks/main.yml
+
+- name: Detect Deployer User
+  stat: "path=/home/deployer"
+  register: deployer
+
+- name: update deployer user 
+  sudo: yes
+  user: 'name={{user}} state=present generate_ssh_key=yes ssh_key_bits=2048'
+  when: not deployer.stat.exists
+
+- name: copy local ssh keys to deploy user
+  sudo: yes
+  copy: 'src={{local_ssh_key}} dest=/home/{{user}}/.ssh/authorized_keys owner={{user}}'
+  when: not deployer.stat.exists
+
+- name: Disallow root SSH access
+  lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
+  sudo: yes
+  notify: restart ssh
+
+- name: Set up authorized_keys for the deploy user
+  authorized_key: user=deployer key='{{ item }}'
+  with_file:
+    - ../../../public_keys/apetit.pub
+    - ../../../public_keys/fbazin.pub
+
+- name: Disallow password authentication
+  lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+  sudo: yes
+  notify: restart ssh
+
+- name: update apt-get 
+  sudo: yes
+  apt: update_cache=yes upgrade=dist force=True
+
+- name: install common packages
+  sudo: yes
+  apt: pkg={{item}} state=present
+  with_items:
+    - autoconf
+    - automake
+    - bison
+    - build-essential
+    - curl
+    - git
+    - git-core
+    - libtool
+    - libreadline6
+    - libreadline6-dev
+    - libssl-dev
+    - libyaml-dev
+    - libsqlite3-dev
+    - libxml2-dev
+    - libxslt1-dev
+    - libc6-dev
+    - nodejs
+    - openssl
+    - pkg-config
+    - python-software-properties
+    - zlib1g
+    - zlib1g-dev
+    - vim
+    - ruby-compass
+    - siege
+    - python-pip
+    - python-dev
+    - libblas-dev
+    - liblapack-dev 
+    - libatlas-base-dev
+    - gfortran
+    - libfreetype6-dev 
+    - libpng12-dev
+    - python-wxgtk2.8 
+    - python-wxtools 
+    - wx2.8-i18n 
+    - libwxgtk2.8-dev 
+    - libgtk2.0-dev
+    - python-pygame
+    - mercurial
+    - libbz2-dev
+
+- include: iptables.yml 
+- include: monit.yml 

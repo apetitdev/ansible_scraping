@@ -1,0 +1,119 @@
+---
+# file: roles/dbservers/tasks/postgres.yml
+
+# Official PostgreSQL [repository] for debian-based distributions
+# [repository]: http://www.postgresql.org/download/
+
+- name: Adding APT repository key
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  apt_key:
+    id: ACCC4CF8
+    url: http://www.postgresql.org/media/keys/ACCC4CF8.asc
+  tags:
+    - postgresql
+    - db
+    - repo
+
+- name: Add PostgreSQL official APT repository
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main 9.5"
+  tags:
+    - postgresql
+    - db
+    - repo
+
+- name: Install PostgreSQL
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  apt:
+    name: "postgresql-{{postgresql_version}}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+  tags:
+    - postgresql
+    - db
+    - deps
+
+- name: Install dependencies for the Ansible module
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  apt:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - python-psycopg2
+  tags:
+    - postgresql
+    - db
+    - deps
+
+# Install postgres dev and other dependencies
+- name: Install PostgreSQL contribs
+  when: postgresql_contrib
+  sudo: yes
+  apt:
+    name: "{{item}}"
+  with_items:
+    - "postgresql-contrib-{{postgresql_version}}"
+    - libgeos-c1
+    - libpq-dev
+  notify: restart postgresql
+  tags:
+    - postgresql
+    - db
+    - deps
+    - dev
+
+- name: Configure PostgreSQL + temporary authentication
+  sudo: yes
+  template:
+    src: "{{item}}"
+    dest: "{{postgresql_conf_directory}}/{{item}}"
+  with_items:
+    # - postgresql.conf
+    # - pg_ctl.conf
+    - pg_hba.conf
+    - environment
+  notify: restart postgresql
+  tags:
+    - postgresql
+    - db
+    - conf
+
+- meta: flush_handlers # We need to run this handler so the auth methods are relaxed
+
+- name: create postgres user
+  postgresql_user: login_host=localhost name={{ postgresql_user }} password={{ postgresql_password }} fail_on_user=yes state=present role_attr_flags=CREATEDB,SUPERUSER
+
+- name: create database
+  sudo: yes
+  postgresql_db: name={{ api_db_name }} owner={{ postgresql_user }} state=present login_host=localhost
+
+- name: we create a file with pg password current database into the server
+  template: 
+    src: pgpassword.j2 
+    dest: "/home/{{ user }}/pgpassword "
+    owner: "{{ user }}"
+
+- name: we export current database password
+  shell: "echo $PGPASSWORD"
+  environment:
+    PGPASSWORD: "{{ postgresql_password }}"
+
+- name: create hstore extension
+  command: psql -U postgres -c "create extension if not exists hstore;"
+
+- name: update postgresql authentication type to safe settings
+  sudo: yes
+  template: 
+    src: pg_hba_safe.conf 
+    dest: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+    owner: postgres 
+    group: postgres 
+    mode: 0600
+  notify: restart postgresql
+

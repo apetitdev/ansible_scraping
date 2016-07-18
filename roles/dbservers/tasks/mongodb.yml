@@ -1,0 +1,95 @@
+---
+# file: roles/dbservers/tasks/mongodb.yml 
+
+- name: MongoDB | Fetch 10Gen signing key
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  command: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+
+- name: Add Mongodb official APT repository
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  apt_repository:
+    repo: "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen"
+  tags:
+    - mongodb
+    - db
+    - repo
+
+# - name: update apt-get 
+#   sudo: yes
+#   apt: update_cache=yes upgrade=dist force=True
+
+- name: Create the mongod user
+  sudo: yes
+  user: name={{ mongodb_root_admin_name }} comment="MongoD"
+
+# - name: MongoDB | Push default configuration template
+#   sudo: yes
+#   template:
+#     src: "mongodb.conf"
+#     dest: /etc/mongodb.conf
+#     owner: root 
+#     group: root 
+#     mode: 0644
+#   notify:
+#   - mongodb-restart
+
+- name: Install the mongodb package
+  sudo: yes
+  apt: pkg={{ item }} state=installed force=yes
+  with_items:
+   - mongodb-org
+   - bc
+   - python-pip
+
+- name: Install the latest pymongo package
+  sudo: yes
+  pip: name=pymongo state=latest use_mirrors=no 
+
+- name: create administrative user siteUserAdmin
+  mongodb_user:
+    database: admin
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    roles: "{{ item.roles }}"
+    login_port: "{{ mongodb_conf_port }}"
+  with_items:
+    - {
+      name: "{{ mongodb_user_admin_name }}",
+      password: "{{ mongodb_user_admin_password }}",
+      roles: "userAdminAnyDatabase"
+      }
+
+- name: create administrative user siteRootAdmin
+  mongodb_user:
+    database: admin
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    roles: "{{ item.roles }}"
+    login_port: "{{ mongodb_conf_port }}"
+  with_items:
+    - {
+      name: "{{ mongodb_root_admin_name }}",
+      password: "{{ mongodb_root_admin_password }}",
+      roles: "root"
+      }
+
+- name: create normal users
+  mongodb_user:
+    database: "{{ item.database }}"
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    roles: "{{ item.roles }}"
+    login_user: "{{ mongodb_user_admin_name }}"
+    login_password: "{{ mongodb_user_admin_password }}"
+    login_port: "{{ mongodb_conf_port }}"
+  with_items:
+    - "{{ mongodb_users }}"
+  when: mongodb_users is defined and mongodb_users
+
+# Insure service is running.
+- name: MongoDB | Insure deamon is running correctly
+  service: name=mongod state=started
+
+
