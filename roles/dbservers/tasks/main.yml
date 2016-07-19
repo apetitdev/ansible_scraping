@@ -1,5 +1,5 @@
 ---
 # file: roles/common/tasks/main.yml
 
-- include: postgres.yml
+#- include: postgres.yml
 - include: mongodb.yml

@@ -11,3 +11,9 @@
 - name: Install the scraping repo requirements package
   sudo: yes
   pip: requirements=/home/deployer/requirements.txt state=present
+
+- name: create shared folder
+  file: path=/home/deployer/apps/eic-school-scraping/shared state=directory
+
+- name: create shared folder
+  copy: src=init.sh dest=/home/deployer/apps/eic-school-scraping/shared/init.sh

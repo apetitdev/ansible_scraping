@@ -46,6 +46,9 @@
     - {name: 'openpyxl',      version: 2.3.3  }
     - {name: 'xlrd',          version: 0.9.4  }
     - {name: 'psycopg2',      version: 2.6.1  }
+  ignore_errors: yes
+  tags:
+    - python libraries
 
 - name: upload Ucloud CDN libray
   sudo: yes
@@ -54,6 +57,7 @@
     dest: "/home/{{user}}"
   with_items:
     - ufile-python
+  ignore_errors: yes
   tags:
     - python
     - CDN
