@@ -1,3 +1,7 @@
 ---
 # file: group_vars/pythonservers
 myvar: 'supervar'
+url_notebook: '/home/deployer/apps/eic-school-scraping/current/'
+file_to_run: '/home/deployer/apps/eic-school-scraping/current/test.ipynb'
+
+jupyter_port: 5874

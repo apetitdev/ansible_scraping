@@ -1,0 +1,37 @@
+---
+# file: roles/jupyterserver/tasks/main.yml
+
+- name: Add the jupyter server configuration file
+  sudo: yes
+  file: path={{ item }} state=directory owner={{ user }} group={{ user }}
+  with_items:
+    - "/home/{{ user }}/.jupyter"
+    - "/home/{{ user }}/.jupyter/log"
+  tags:
+    - jupyter server creation
+    - create config folder
+
+- name: Check if Jupyer error log file exists
+  stat: path=/home/{{ user }}/.jupyter/log/nginx.error.log
+  register: jupyer_error_log
+
+- name: Check if Jupyer access log file exists
+  stat: path=/home/{{ user }}/.jupyter/log/nginx.access.log
+  register: jupyer_access_log
+
+- name: create error nginx log file for jupyter
+  file: path=/home/{{ user }}/.jupyter/log/nginx.error.log state=touch mode=0777
+  when: jupyer_error_log.stat.exists is defined and jupyer_error_log.stat.exists
+
+- name: create access nginx log file for jupyter
+  file: path=/home/{{ user }}/.jupyter/log/nginx.access.log state=touch mode=0777
+  when: jupyer_access_log.stat.exists is defined and jupyer_access_log.stat.exists
+
+- name: Add the jupyter server configuration file
+  sudo: yes
+  template: src=jupyter_notebook_config.py.j2 dest="/home/{{ user }}/.jupyter/jupyter_notebook_config.py" owner={{ user }} group={{ user }}
+  tags:
+    - jupyter server
+    - configuration file
+
+- include: nginx.yml

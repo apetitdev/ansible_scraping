@@ -1,0 +1,7 @@
+---
+# file: jupyerserver.yml
+
+- hosts: jupyterserver
+  user: deployer
+  roles:
+    - jupyterserver

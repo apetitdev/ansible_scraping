@@ -1,0 +1,31 @@
+---
+# file: roles/jupyterserver/tasks/nginx.yml'
+
+- name: Make sure nginx has been installed on the server
+  sudo: yes
+  apt: pkg={{item}} state=present
+  with_items:
+    - nginx
+  tags:
+    - set up nginx
+
+- name: Add the nginx configuration file for jupyter
+  sudo: yes
+  template: src=jupyter.conf.j2 dest=/etc/nginx/sites-available/jupyter.conf
+  tags:
+    - nginx configuration
+    - juptyer
+
+- name: Add the nginx configuration file for jupyter
+  sudo: yes
+  template: src=jupyter.conf.j2 dest=/etc/nginx/sites-available/jupyter.conf
+  tags:
+    - nginx configuration
+    - juptyer
+
+- name: We create the symbolic link for the server on nginx
+  sudo: yes
+  file: src=/etc/nginx/sites-available/jupyter.conf dest=/etc/nginx/sites-enabled/jupyter.conf state=link
+  tags:
+    - nginx configuration
+    - juptyer
